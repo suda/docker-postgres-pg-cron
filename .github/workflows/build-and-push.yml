@@ -23,23 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        base_version:
-        - 16-alpine
-        - 16-alpine3.21
-        - 16-alpine3.22
-        - 16-trixie
-        - 15-alpine
-        - 15-alpine3.21
-        - 15-alpine3.22
-        - 15-trixie
-        - 14-alpine
-        - 14-alpine3.21
-        - 14-alpine3.22
-        - 14-trixie
-        - 13-alpine
-        - 13-alpine3.21
-        - 13-alpine3.22
-        - 13-trixie
+        postgres_version: ["13", "14", "15", "16"]
+        os_version: ["alpine", "alpine3.21", "alpine3.22", "trixie"]
 
     steps:
       - name: Checkout
@@ -60,12 +45,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push (${{ matrix.base_version }})
+      - name: Build and push (${{ matrix.postgres_version }}-${{ matrix.os_version }})
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg BASE_VERSION=${{ matrix.base_version }} \
-            --tag $IMAGE_NAME:${{ matrix.base_version }} \
+            --build-arg POSTGRES_VERSION=${{ matrix.postgres_version }} \
+            --file Dockerfile.${{ matrix.os_version }} \
+            --tag $IMAGE_NAME:${{ matrix.postgres_version }}-${{ matrix.os_version }} \
             --push \
             .
 

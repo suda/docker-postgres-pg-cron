@@ -1,0 +1,66 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base_version:
+        - 16-alpine
+        - 16-alpine3.21
+        - 16-alpine3.22
+        - 16-trixie
+        - 15-alpine
+        - 15-alpine3.21
+        - 15-alpine3.22
+        - 15-trixie
+        - 14-alpine
+        - 14-alpine3.21
+        - 14-alpine3.22
+        - 14-trixie
+        - 13-alpine
+        - 13-alpine3.21
+        - 13-alpine3.22
+        - 13-trixie
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (${{ matrix.base_version }})
+        run: |
+          docker buildx build \
+            --build-arg BASE_VERSION=${{ matrix.base_version }} \
+            --tag $IMAGE_NAME:${{ matrix.base_version }} \
+            --push \
+            .
+
+

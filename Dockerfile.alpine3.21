@@ -13,4 +13,5 @@ RUN apk add --no-cache --virtual .build-deps ${BUILD_DEPS} && \
   make -C /tmp/pg_cron install && \
   rm -rf /tmp/pg_cron && \
   apk del .build-deps && \
-  echo "shared_preload_libraries = 'pg_cron'" >> /usr/local/share/postgresql/postgresql.conf.sample
+  echo "shared_preload_libraries = 'pg_cron'" >> /usr/local/share/postgresql/postgresql.conf.sample && \
+  sed -i 's|exec "\$@"|exec "\$@" "\${POSTGRES_ARGS}"|' /usr/local/bin/docker-entrypoint.sh

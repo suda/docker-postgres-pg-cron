@@ -1,16 +1,19 @@
 ARG POSTGRES_VERSION
 FROM postgres:${POSTGRES_VERSION}-trixie
 
-ENV BUILD_DEPS="build-essential git clang llvm lld"
+ARG POSTGRES_VERSION
+ENV POSTGRES_VERSION=${POSTGRES_VERSION}
+ENV BUILD_DEPS="build-essential git clang llvm lld postgresql-server-dev-${POSTGRES_VERSION}"
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y ${BUILD_DEPS} && \
   git clone --depth=1 https://github.com/citusdata/pg_cron /tmp/pg_cron && \
+  mkdir -p /usr/local/share/postgresql/ && \
   make -C /tmp/pg_cron \
-    CLANG="$(command -v clang)" \
-    LLVM_CONFIG="$(command -v llvm-config)" \
-    LLVM_AR="$(command -v llvm-ar)" \
-    LLVM_RANLIB="$(command -v llvm-ranlib)" \
-    LLVM_LTO="$(command -v llvm-lto)" && \
+  CLANG="$(command -v clang)" \
+  LLVM_CONFIG="$(command -v llvm-config)" \
+  LLVM_AR="$(command -v llvm-ar)" \
+  LLVM_RANLIB="$(command -v llvm-ranlib)" \
+  LLVM_LTO="$(command -v llvm-lto)" && \
   make -C /tmp/pg_cron install && \
   rm -rf /tmp/pg_cron && \
   apt-get remove -y ${BUILD_DEPS} && \
